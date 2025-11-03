@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Car Game</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    canvas {
+      background: #333;
+      display: block;
+      margin: 25px auto;
+      border: 3px solid #0077ff;
+      border-radius: 14px;
+    }
+    #score {
+      margin-top: 10px;
+      font-size: 1.3em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Car Dodge Game</h1>
+  <canvas id="game" width="400" height="600"></canvas>
+  <div id="score">Score: 0</div>
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // Car properties
+    const car = {
+      w: 40,
+      h: 80,
+      x: W / 2 - 20,
+      y: H - 100,
+      speed: 6
+    };
+
+    // Obstacles
+    let obstacles = [];
+    let obsSpeed = 5;
+    let score = 0;
+    let gameOver = false;
+
+    function reset() {
+      car.x = W/2 - car.w/2;
+      score = 0;
+      obsSpeed = 5;
+      obstacles = [];
+      gameOver = false;
+    }
+
+    function drawCar() {
+      ctx.fillStyle = '#00ff6a';
+      ctx.fillRect(car.x, car.y, car.w, car.h);
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = '#ff2222';
+      obstacles.forEach(ob => {
+        ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
+      });
+    }
+
+    function addObstacle() {
+      const w = 40;
+      const h = 40;
+      const x = Math.random() * (W - w);
+      obstacles.push({x, y: -h, w, h});
+    }
+
+    function updateObstacles() {
+      obstacles.forEach(ob => ob.y += obsSpeed);
+      obstacles = obstacles.filter(ob => ob.y < H);
+    }
+
+    function checkCollision() {
+      for (const ob of obstacles) {
+        if (!(car.x + car.w < ob.x || car.x > ob.x + ob.w ||
+              car.y + car.h < ob.y || car.y > ob.y + ob.h)) {
+          gameOver = true;
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      drawCar();
+      drawObstacles();
+      ctx.fillStyle = "white";
+      ctx.font = "22px sans-serif";
+      if (gameOver) {
+        ctx.fillText("Game Over!", W/2 - 70, H/2);
+        ctx.fillText("Press R to Restart", W/2 - 90, H/2 + 40);
+      }
+    }
+
+    function update() {
+      if (gameOver) return;
+      score++;
+      document.getElementById('score').textContent = "Score: " + score;
+      if (score % 300 === 0) obsSpeed += 1;
+      if (Math.random() < 0.05) addObstacle();
+      updateObstacles();
+      checkCollision();
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === "ArrowLeft" && car.x > 0)
+        car.x -= car.speed;
+      if (e.key === "ArrowRight" && car.x < W - car.w)
+        car.x += car.speed;
+      if (gameOver && (e.key === 'r' || e.key === 'R')) {
+        reset();
+      }
+    });
+
+    // Start the game
+    reset();
+    loop();
+  </script>
+</body>
+</html>
